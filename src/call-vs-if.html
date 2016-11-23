@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var o = window.o = {}
+
+        function init() {
+          o = {
+            i: 0,
+            array: [],
+            init(a) {
+              if (!this.array.length) {
+                return
+              }
+              this.i = this.i + a
+            }
+          }
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['call', function () {
+          o.init(0)
+        }]);
+
+        benches.push(['if', function () {
+          if (o.array.length) {
+            o.init(0)
+          }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

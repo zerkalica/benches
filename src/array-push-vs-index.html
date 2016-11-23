@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var array = window.arr
+
+        function init() {
+          array = new Array(100)
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['push', function () {
+          array.push(123)
+          array.push(321)
+          array.push(444)
+        }]);
+
+        benches.push(['length++', function () {
+          array[array.length++] = 123
+          array[array.length++] = 321
+          array[array.length++] = 444
+        }]);
+
+        benches.push(['length+1', function () {
+          array[array.length] = 123
+          array.length = array.length + 1
+          array[array.length] = 321
+          array.length = array.length + 1
+          array[array.length] = 444
+          array.length = array.length + 1
+        }]);
+
+        benches.push(['length-cached', function () {
+          var l = array.length
+          array[l] = 123
+          l = l + 1
+          array[l] = 321
+          l = l + 1
+          array[l] = 444
+          l = l + 1
+        }]);
+
+        benches.push(['length-cached++', function () {
+          var l = array.length
+          array[l] = 123
+          l++
+          array[l] = 321
+          l++
+          array[l] = 444
+          l++
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

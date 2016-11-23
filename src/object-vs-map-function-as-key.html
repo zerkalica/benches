@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <pre id="info"></pre>
+    <pre id="stats"></pre>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var arrayMap;
+        var keys;
+        var map1;
+        var map2;
+        var symbKey = window.symbKey = Symbol('rdi');
+        var strKey = window.strKey = 'ξrdi';
+        var strKey2 = window.strKey2 = '__rdi__id';
+        var obj = window.obj = Object.create(null)
+
+        var k = window.k = {
+          getKey: function (fn) {
+            return fn[strKey]
+          },
+
+          getV: function (key) {
+            return map2.get(key)
+          }
+        }
+
+        function setup() {
+          arrayMap = []
+          keys = []
+          map1 = new Map()
+          map2 = new Map()
+          for (var i = 0; i < 100; i++) {
+            var f = function() {}
+            var key = 'ka' + String(i)
+            f[symbKey] = key
+            f[strKey] = key
+            obj[key] = {i: i}
+            Object.defineProperty(f, strKey2, {
+              value: key,
+              writable: false,
+              configurable: false,
+              enumerable: false
+            })
+            map1.set(f, {i: i})
+            map2.set(f[strKey], {i: i})
+
+            keys.push(f)
+          }
+        }
+        var benches = []
+
+        benches.push(['map.get#func', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            value = map1.get(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        benches.push(['map.get#func-prop-function', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = k.getKey(keys[i])
+            value = k.getV(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        benches.push(['map.get#func-prop', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i][strKey]
+            value = map2.get(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        benches.push(['map.get#func-symbol', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i][symbKey]
+            value = map2.get(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        benches.push(['obj[key]#func-prop', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i][strKey]
+            value = obj[key]
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        benches.push(['map.get#func-hidden-prop', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i].__rdi__id
+            value = map2.get(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        var t = this
+        setup()
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

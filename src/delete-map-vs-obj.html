@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var map1
+        var obj
+        var nullObj
+        var keys
+
+        function setup() {
+          map1 = new Map()
+          obj = {}
+          nullObj = Object.create(null)
+          keys = []
+
+          for (var i = 0; i < 100; i++) {
+            const k = 'k' + i
+            keys.push(k)
+            map1.set(k, i)
+            obj[k] = i
+            nullObj[k] = i
+          }
+        }
+
+        var benches = []
+
+        benches.push(['map.delete', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            map1.delete(key)
+          }
+        }]);
+
+        benches.push(['obj#delete', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            delete map1[key]
+          }
+        }]);
+
+        benches.push(['obj#null', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            map1[key] = null
+          }
+        }]);
+
+        benches.push(['map.set#null', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            map1.set(key, null)
+          }
+        }]);
+
+        benches.push(['nullObj#delete', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            delete nullObj[key]
+          }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

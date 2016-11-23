@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Unique function keys in map vs string keys in set + map</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var keys
+        var setHelperMap
+        var map1
+        var set1
+
+        function setup() {
+          keys = []
+          setHelperMap = new Map()
+          map1 = new Map()
+          set1 = new Set()
+          for (var i = 0; i < 100; i++) {
+            var f = function() {}
+            f['__rdi_id'] = 'st' + String(i)
+            setHelperMap.set(f['__rdi_id'], f)
+            keys.push(f)
+          }
+        }
+
+        var benches = []
+
+        benches.push(['map.set#function-as-key', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            map1.set(key, true)
+          }
+          var uniqKeys = []
+          map1.forEach(function (value, key) {
+            uniqKeys.push(key)
+          });
+        }]);
+
+        benches.push(['map.set#string-as-key', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i].__rdi_id
+            map1.set(key, true)
+          }
+          var uniqKeys = []
+          map1.forEach(function (key) {
+            uniqKeys.push(key)
+          });
+        }]);
+
+        benches.push(['set.add#function-as-key', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i]
+            set1.add(key)
+          }
+          var uniqKeys = []
+          set1.forEach(function (key) {
+            uniqKeys.push(key)
+          });
+        }]);
+
+        benches.push(['set.add#string-as-key', function () {
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i]
+            if (!k) {
+              k.__rdi_id = '123'
+            }
+            var key = k.__rdi_id
+            set1.add(key)
+          }
+          var uniqKeys = []
+          set1.forEach(function (key) {
+            uniqKeys.push(key)
+          });
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>
