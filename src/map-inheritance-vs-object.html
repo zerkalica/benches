@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var m = window.m = new Map()
+        var m0 = window.m0 = new Map()
+        var o = window.o = {}
+        var o0 = window.o0 = {}
+
+        function init() {
+            m0 = new Map()
+            o0 = {}
+            for (let i = 0; i < 1000; i++) {
+                const k = 'ka' + i
+                const v = k + '.v'
+                o0[k] = v
+                m0.set(k, v)
+            }
+
+            m = new Map(m0)
+            o = Object.create(o0)
+
+            for (let i = 500; i < 1000; i++) {
+                const k = 'ka' + i
+                const v = k + '.v'
+                o[k] = v
+                m.set(k, v)
+            }
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['copy map', function () {
+          var m1 = new Map(m0)
+        }]);
+
+        benches.push(['copy object Object.create', function () {
+          var o1 = Object.create(o0)
+        }]);
+
+        benches.push(['copy object create fn', function () {
+          var O1 = function () {}
+          O1.prototype = o0
+          var o1 = new O1
+        }]);
+
+        benches.push(['full o[string]', function () {
+          var c = ''
+          for (let i = 0; i < 1000; i++) {
+            c = o0['ka' + i]
+          }
+        }]);
+
+        benches.push(['full map.get(string)', function () {
+          var c = ''
+          for (let i = 0; i < 1000; i++) {
+            c = m0.get('ka' + i)
+          }
+        }]);
+
+        benches.push(['inherited o[string]', function () {
+          var c = ''
+          for (let i = 0; i < 1000; i++) {
+            c = o['ka' + i]
+          }
+        }]);
+
+        benches.push(['inherited map.get(string)', function () {
+          var c = ''
+          for (let i = 0; i < 1000; i++) {
+            c = m.get('ka' + i)
+          }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

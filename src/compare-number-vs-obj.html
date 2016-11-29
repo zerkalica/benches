@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var n = 55
+        var obj = window.obj = {}
+        var numbers = window.numbers = []
+        var objects = window.objects = []
+        var numbers2 = window.numbers2 = []
+        var objects2 = window.objects2 = []
+        function init() {
+            numbers = []
+            objects = []
+            numbers2 = []
+            objects2 = []
+            obj = {}
+            const nums = [1, 2, 111]
+            const objs = [{a:1}, {a:2}, {a:3}]
+            let j = 0
+            for (var i = 0; i < 1010; i++) {
+              numbers.push(nums[j])
+              objects.push(objs[j])
+              numbers2.push(nums[j])
+              objects2.push(objs[j])
+              j++
+              if (j > 2) {
+                j = 0
+              }
+            }
+        }
+
+        init()
+        // setup = function () {}
+        var setup = init
+        var benches = []
+
+        benches.push(['number vs null', function () {
+          for (var i = 0; i < 1000; i++) {
+            if (numbers[i] === null) {
+              // console.log('123')
+            }
+          }
+        }]);
+
+        benches.push(['obj vs null', function () {
+          for (var i = 0; i < 1000; i++) {
+            if (objects[i] === null) {
+              // console.log('123')
+            }
+          }
+        }]);
+
+        benches.push(['obj vs empty object', function () {
+          for (var i = 0; i < 1000; i++) {
+            if (objects[i] === obj) {
+              // console.log('123')
+            }
+          }
+        }]);
+
+        benches.push(['obj vs bool', function () {
+          for (var i = 0; i < 1000; i++) {
+            if (objects[i] === false) {
+              // console.log('123')
+            }
+          }
+        }]);
+
+        benches.push(['numbers', function () {
+          for (var i = 0; i < 1000; i++) {
+            if (numbers[i] === numbers2[i + 2]) {
+              // console.log('123')
+            }
+          }
+        }]);
+
+        benches.push(['objects', function () {
+          for (var i = 0; i < 1000; i++) {
+            if (objects[i] === objects2[i + 2]) {
+              // console.log('123')
+            }
+          }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

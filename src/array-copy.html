@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var list = window.list = []
+
+        function init() {
+          list = []
+          for (let i = 0; i < 80; i++) {
+            list[i] = i * 2
+          }
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['for', function () {
+            var copy = new Array(list.length);
+            for ( var i = 0, l = list.length;i < l; i++ ) copy[i] = list[i];
+        }]);
+
+        benches.push(['slice', function () {
+            copy = list.slice()
+        }]);
+
+        benches.push(['slice(0)', function () {
+            copy = list.slice(0)
+        }]);
+
+        benches.push(['concat', function () {
+            copy = [].concat(list)
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

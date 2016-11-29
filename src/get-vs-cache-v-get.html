@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var o = window.o = {}
+        var o2 = window.o2 = {}
+
+        function init() {
+          class A {
+              constructor() {
+                  this.cached = true
+                  this.v = 1
+              }
+
+              get() {
+                  if (!this.cached) {
+                      this.cached = true
+                      this.v = 2
+                  }
+                  return this.v
+              }
+          }
+          o = new A()
+          class B {
+              constructor() {
+                  this.cached = true
+                  this.v = 1
+              }
+
+              get() {
+                  return this.v
+              }
+          }
+          o2 = new B()
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['get', function () {
+          var c = o.get()
+          if (!c) {
+            console.log('1')
+          }
+        }]);
+
+        benches.push(['dummy get', function () {
+          var c = o2.get()
+          if (!c) {
+            console.log('1')
+          }
+        }]);
+
+        benches.push(['cache-v-get', function () {
+          var c = o.cached ? o.v : o.get()
+          if (!c) {
+            console.log('1')
+          }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var strings = window.strings = []
+        var numbers = window.numbers = []
+
+        function init() {
+          numbers = []
+          var max = 100
+          for (let i = 0; i < max; i++) {
+            numbers[i] = i
+          }
+
+          strings = []
+          for (let i = 0; i < max; i++) {
+            strings[i] = String(i)
+          }
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['string', function () {
+            for ( var i = 0, l = strings.length;i < l; i++ ) {
+                if (strings[i] === '55') {
+                  ;
+                }
+            }
+        }]);
+
+        benches.push(['numbers', function () {
+            for ( var i = 0, l = numbers.length;i < l; i++ ) {
+                if (numbers[i] === 55) {
+                  ;
+                }
+            }
+        }]);
+
+        const FIND = 5
+
+        benches.push(['numbers + const', function () {
+            for ( var i = 0, l = numbers.length;i < l; i++ ) {
+                if (numbers[i] === FIND) {
+                  ;
+                }
+            }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

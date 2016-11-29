@@ -20,27 +20,23 @@
         var strKey = window.strKey = 'ξrdi';
         var strKey2 = window.strKey2 = '__rdi__id';
         var obj = window.obj = Object.create(null)
-
-        var k = window.k = {
-          getKey: function (fn) {
-            return fn[strKey]
-          },
-
-          getV: function (key) {
-            return map2.get(key)
-          }
-        }
+        var arr = window.arr = []
 
         function setup() {
           arrayMap = []
           keys = []
           map1 = new Map()
           map2 = new Map()
+          arr = []
+          obj = Object.create(null)
           for (var i = 0; i < 100; i++) {
             var f = function() {}
             var key = 'ka' + String(i)
             f[symbKey] = key
             f[strKey] = key
+            var arrKey = i * 3 + 1 + parseInt(Math.random() * 3)
+            f.__numKey = arrKey
+            arr[arrKey] = {i: i}
             obj[key] = {i: i}
             Object.defineProperty(f, strKey2, {
               value: key,
@@ -56,55 +52,43 @@
         }
         var benches = []
 
-        benches.push(['map.get#func', function () {
-          var summ = 0
-          var value
-          for (var i = 0; i < keys.length; i++) {
-            var key = keys[i]
-            value = map1.get(key)
-            if (value) {
-                summ++
-            }
-          }
-        }]);
+        // benches.push(['map.get(func)', function () {
+        //   var summ = 0
+        //   var value
+        //   for (var i = 0; i < keys.length; i++) {
+        //     var key = keys[i]
+        //     value = map1.get(key)
+        //     if (value) {
+        //         summ++
+        //     }
+        //   }
+        // }]);
+        //
+        // benches.push(['o[string]: string -> map.get(string)', function () {
+        //   var summ = 0
+        //   var value
+        //   for (var i = 0; i < keys.length; i++) {
+        //     var key = keys[i][strKey]
+        //     value = map2.get(key)
+        //     if (value) {
+        //         summ++
+        //     }
+        //   }
+        // }]);
+        //
+        // benches.push(['o[symbol]: string -> map.get(string)', function () {
+        //   var summ = 0
+        //   var value
+        //   for (var i = 0; i < keys.length; i++) {
+        //     var key = keys[i][symbKey]
+        //     value = map2.get(key)
+        //     if (value) {
+        //         summ++
+        //     }
+        //   }
+        // }]);
 
-        benches.push(['map.get#func-prop-function', function () {
-          var summ = 0
-          var value
-          for (var i = 0; i < keys.length; i++) {
-            var key = k.getKey(keys[i])
-            value = k.getV(key)
-            if (value) {
-                summ++
-            }
-          }
-        }]);
-
-        benches.push(['map.get#func-prop', function () {
-          var summ = 0
-          var value
-          for (var i = 0; i < keys.length; i++) {
-            var key = keys[i][strKey]
-            value = map2.get(key)
-            if (value) {
-                summ++
-            }
-          }
-        }]);
-
-        benches.push(['map.get#func-symbol', function () {
-          var summ = 0
-          var value
-          for (var i = 0; i < keys.length; i++) {
-            var key = keys[i][symbKey]
-            value = map2.get(key)
-            if (value) {
-                summ++
-            }
-          }
-        }]);
-
-        benches.push(['obj[key]#func-prop', function () {
+        benches.push(['o[string]: string -> obj[string]', function () {
           var summ = 0
           var value
           for (var i = 0; i < keys.length; i++) {
@@ -116,17 +100,57 @@
           }
         }]);
 
-        benches.push(['map.get#func-hidden-prop', function () {
+        benches.push(['o[string]: string -> arr[number]', function () {
           var summ = 0
           var value
+          var c = 0
           for (var i = 0; i < keys.length; i++) {
-            var key = keys[i].__rdi__id
-            value = map2.get(key)
+            var key = keys[i].__numKey
+            if (key) {
+              keys[i].__numKey2 = c++
+            }
+            value = arr[key]
             if (value) {
                 summ++
             }
           }
         }]);
+
+        // benches.push(['hidden o.__rdi__id: string -> obj[string]', function () {
+        //   var summ = 0
+        //   var value
+        //   for (var i = 0; i < keys.length; i++) {
+        //     var key = keys[i].__rdi__id
+        //     value = obj[key]
+        //     if (value) {
+        //         summ++
+        //     }
+        //   }
+        // }]);
+        //
+        // benches.push(['hidden o.__rdi__id: string -> map.get(string)', function () {
+        //   var summ = 0
+        //   var value
+        //   for (var i = 0; i < keys.length; i++) {
+        //     var key = keys[i].__rdi__id
+        //     value = map2.get(key)
+        //     if (value) {
+        //         summ++
+        //     }
+        //   }
+        // }]);
+        //
+        // benches.push(['hidden o[string]: string -> map.get(string)', function () {
+        //   var summ = 0
+        //   var value
+        //   for (var i = 0; i < keys.length; i++) {
+        //     var key = keys[i][strKey2]
+        //     value = map2.get(key)
+        //     if (value) {
+        //         summ++
+        //     }
+        //   }
+        // }]);
 
         const container = document.getElementById('stats')
         const info = document.getElementById('info')
