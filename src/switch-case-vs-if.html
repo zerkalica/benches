@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var a1 = window.a1 = []
+        var a2 = window.a2 = []
+        var a3 = window.a3 = []
+        function init() {
+          a1 = []
+          a2 = []
+          a3 = []
+          for (let i = 0; i < 100; i++) {
+              a1.push({t: '0', c: 10})
+              a1.push({t: '1', c: 10})
+              a1.push({t: '2', c: 10})
+
+              a2.push({t: 'loooong-0', c: 10})
+              a2.push({t: 'loooong-1', c: 10})
+              a2.push({t: 'loooong-2', c: 10})
+
+              a3.push({t: 0, c: 10})
+              a3.push({t: 1, c: 10})
+              a3.push({t: 2, c: 10})
+          }
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['switch - number props', function () {
+            for (let i = 0; i < a3.length; i++) {
+                var p = a3[i]
+                switch (p.t) {
+                    case 1:
+                        p.c++;
+                        break
+                    case 2:
+                        p.c--;
+                        break
+                    default:
+                        p.c = 0
+                }
+            }
+        }]);
+
+        benches.push(['if - number props', function () {
+            for (let i = 0; i < a3.length; i++) {
+                var p = a3[i]
+                if (p.t === 1) {
+                    p.c++
+                } else if (p.t === 2) {
+                    p.c--
+                } else {
+                    p.c = 0
+                }
+            }
+        }]);
+
+        benches.push(['optimized if - number props', function () {
+            for (let i = 0; i < a3.length; i++) {
+                var p = a3[i]
+                if (p.t === 0) {
+                    p.c = 0
+                } else if (p.t === 1) {
+                    p.c++
+                } else {
+                    p.c--
+                }
+            }
+        }]);
+
+        benches.push(['optimized if 2 - number props', function () {
+            for (let i = 0; i < a3.length; i++) {
+                var p = a3[i]
+                if (!p.t) {
+                    p.c = 0
+                } else if (p.t === 1) {
+                    p.c++
+                } else {
+                    p.c--
+                }
+            }
+        }]);
+/*
+        benches.push(['switch - short string props', function () {
+            for (let i = 0; i < a1.length; i++) {
+                var p = a1[i]
+                switch (p.t) {
+                    case '1':
+                        p.c++;
+                        break
+                    case '2':
+                        p.c--;
+                        break
+                    default:
+                        p.c = 0
+                }
+            }
+        }]);
+
+        benches.push(['if - short string props', function () {
+            for (let i = 0; i < a1.length; i++) {
+                var p = a1[i]
+                if (p.t === '0') {
+                    p.c = 0
+                } else if (p.t === '1') {
+                    p.c++
+                } else {
+                    p.c--
+                }
+            }
+        }]);
+
+        benches.push(['switch - long string props', function () {
+            for (let i = 0; i < a2.length; i++) {
+                var p = a2[i]
+                switch (p.t) {
+                    case 'loooong-1':
+                        p.c++;
+                        break
+                    case 'loooong-2':
+                        p.c--;
+                        break
+                    default:
+                        p.c = 0
+                }
+            }
+        }]);
+
+        benches.push(['if - long string props', function () {
+            for (let i = 0; i < a2.length; i++) {
+                var p = a2[i]
+                if (p.t === 'loooong-0') {
+                    p.c = 0
+                } else if (p.t === 'loooong-1') {
+                    p.c++
+                } else {
+                    p.c--
+                }
+            }
+        }]);
+*/
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

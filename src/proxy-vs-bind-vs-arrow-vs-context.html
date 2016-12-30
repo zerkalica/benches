@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var a1 = window.a1 = {}
+        var a2 = window.a1 = {}
+        function init() {
+          a1 = {
+            m: 1
+          }
+          function m(v) {
+            a1.m = v
+          }
+
+          a1.set = new Proxy(a1, {
+            get(t, n, v) {
+                return m
+            }
+          })
+
+          a2 = {
+            m: 2
+          }
+
+          a2.set = {
+            m(v) {
+              a2.m = v
+            }
+          }
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['proxy', function () {
+          const m = a1.set.m
+          m(1)
+        }]);
+
+        benches.push(['arrow', function () {
+          const m = a2.set.m
+          m(1)
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>

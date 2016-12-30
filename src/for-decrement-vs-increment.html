@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bench</title>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="stats"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/benchmark/2.1.0/benchmark.js"></script>
+    <script>
+      (function () {
+        var a1 = window.a1 = []
+        function init() {
+          a1 = []
+          for (let i = 0; i < 10; i++) {
+              a1.push({t: '0', c: 10})
+          }
+        }
+
+        init()
+        var setup = init
+        var benches = []
+
+        benches.push(['for increment', function () {
+          var min = 1
+            for (let i = min; i < a1.length; i++) {
+                a1[i].c++
+            }
+        }]);
+
+        benches.push(['for decrement', function () {
+            var max = 1
+            for (let i = a1.length - 1; i >= max; i--) {
+                a1[i].c++
+            }
+        }]);
+
+        benches.push(['for pre decrement', function () {
+            var max = 1
+            for (let i = a1.length; --i >= max;) {
+                a1[i].c++
+            }
+        }]);
+
+        benches.push(['while pre decrement', function () {
+            var max = 1
+            let i = a1.length
+            let j = a1.length - 1
+            while (--i >= max) {
+                a1[i].c++
+            }
+        }]);
+
+        benches.push(['while pre decrement compare vs 0', function () {
+            var max = 1
+            let i = a1.length - max
+            let j = a1.length - 1
+            while (--i) {
+                a1[j--].c++
+            }
+        }]);
+
+        benches.push(['while post decrement', function () {
+            var max = 1
+            let i = a1.length - 1
+            while (i-- >= max) {
+                a1[i].c++
+            }
+        }]);
+
+        const container = document.getElementById('stats')
+        const info = document.getElementById('info')
+        var error = null
+
+        info.innerHTML = 'started';
+        benches.forEach(function (benchRaw) {
+          var bench
+          bench = new Benchmark(benchRaw[0], benchRaw[1], {
+            setup: setup,
+            onStart: function () {
+              info.innerHTML = 'Running ' + bench.name;
+            },
+            onError: function (err) {
+              error = err
+            },
+            onComplete: function () {
+              var el = document.createElement('pre')
+              el.innerHTML = bench.toString()
+              container.appendChild(el)
+              info.innerHTML = 'Completed ' + bench.name;
+              if (error) {
+                info.innerHTML = String(error.message.stack);
+                console.log(error)
+              }
+            }
+          })
+          bench.run({'async': true})
+        })
+    })();
+    </script>
+  </body>
+</html>
