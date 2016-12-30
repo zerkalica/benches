@@ -63,30 +63,42 @@
         //     }
         //   }
         // }]);
-        //
-        // benches.push(['o[string]: string -> map.get(string)', function () {
-        //   var summ = 0
-        //   var value
-        //   for (var i = 0; i < keys.length; i++) {
-        //     var key = keys[i][strKey]
-        //     value = map2.get(key)
-        //     if (value) {
-        //         summ++
-        //     }
-        //   }
-        // }]);
-        //
-        // benches.push(['o[symbol]: string -> map.get(string)', function () {
-        //   var summ = 0
-        //   var value
-        //   for (var i = 0; i < keys.length; i++) {
-        //     var key = keys[i][symbKey]
-        //     value = map2.get(key)
-        //     if (value) {
-        //         summ++
-        //     }
-        //   }
-        // }]);
+
+        benches.push(['o[string]: string -> map.get(string)', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i][strKey]
+            value = map2.get(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        benches.push(['o[symbol]: string -> map.get(string)', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i][symbKey]
+            value = map2.get(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
+
+        benches.push(['o.__numKey: string -> map.get(string)', function () {
+          var summ = 0
+          var value
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i].__numKey
+            value = map2.get(key)
+            if (value) {
+                summ++
+            }
+          }
+        }]);
 
         benches.push(['o[string]: string -> obj[string]', function () {
           var summ = 0
@@ -100,7 +112,7 @@
           }
         }]);
 
-        benches.push(['o[string]: string -> arr[number]', function () {
+        benches.push(['o.__numKey: string -> arr[number]', function () {
           var summ = 0
           var value
           var c = 0
